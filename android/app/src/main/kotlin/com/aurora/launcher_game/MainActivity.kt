@@ -1,4 +1,4 @@
-package com.example.launcher_game
+package com.aurora.launcher_game
 
 import io.flutter.embedding.android.FlutterActivity
 
