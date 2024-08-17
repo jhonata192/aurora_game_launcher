@@ -40,7 +40,23 @@ class _LauncherHomeState extends State<LauncherHome> {
   @override
   void initState() {
     super.initState();
-    _initializeDownloadPath();
+    _requestPermissions();
+  }
+
+  Future<void> _requestPermissions() async {
+    // Solicita permissões de armazenamento e instalação de pacotes
+    final storageStatus = await Permission.manageExternalStorage.request();
+    final installStatus = await Permission.requestInstallPackages.request();
+
+    if (storageStatus.isGranted && installStatus.isGranted) {
+      print('Permissões concedidas.');
+      _initializeDownloadPath();
+    } else {
+      print('Permissões negadas.');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Permissões negadas.')),
+      );
+    }
   }
 
   Future<void> _initializeDownloadPath() async {
@@ -96,127 +112,132 @@ class _LauncherHomeState extends State<LauncherHome> {
       int localPart = int.parse(localParts[i]);
       int serverPart = int.parse(serverParts[i]);
 
-      if (localPart < serverPart) return -1;
-      if (localPart > serverPart) return 1;
+      if (localPart < serverPart) {
+        print('Versão local é mais antiga.');
+        return -1;
+      }
+      if (localPart > serverPart) {
+        print('Versão local é mais recente.');
+        return 1;
+      }
     }
+    print('Versões são iguais.');
     return 0;
   }
 
   Future<void> downloadAndInstall() async {
-    if (await Permission.storage.request().isGranted &&
-        await Permission.requestInstallPackages.request().isGranted) {
-      if (downloadPath != null) {
-        try {
-          showDialog(
-            context: context,
-            barrierDismissible: false,
-            builder: (BuildContext context) {
-              return AlertDialog(
-                title: Text('Baixando Atualização'),
-                content: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    ValueListenableBuilder<double>(
-                      valueListenable: downloadProgress,
-                      builder: (context, progress, child) {
-                        return LinearProgressIndicator(value: progress);
-                      },
-                    ),
-                    SizedBox(height: 20),
-                    ValueListenableBuilder<double>(
-                      valueListenable: downloadedMBs,
-                      builder: (context, downloaded, child) {
-                        return ValueListenableBuilder<double>(
-                          valueListenable: totalMBs,
-                          builder: (context, total, child) {
-                            return Text('${downloaded.toStringAsFixed(2)} MB de ${total.toStringAsFixed(2)} MB baixados');
-                          },
-                        );
-                      },
-                    ),
-                    ValueListenableBuilder<double>(
-                      valueListenable: downloadProgress,
-                      builder: (context, progress, child) {
-                        return Text('${(progress * 100).toStringAsFixed(0)}% concluído');
-                      },
-                    ),
-                  ],
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () {
-                      cancelToken.cancel('Download cancelado pelo usuário.');
-                      Navigator.of(context).pop();
-                      setState(() {
-                        isDownloading = false;
-                      });
+    print('Iniciando download e instalação...');
+    if (downloadPath != null) {
+      try {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text('Baixando Atualização'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ValueListenableBuilder<double>(
+                    valueListenable: downloadProgress,
+                    builder: (context, progress, child) {
+                      return LinearProgressIndicator(value: progress);
                     },
-                    child: Text('Cancelar'),
+                  ),
+                  SizedBox(height: 20),
+                  ValueListenableBuilder<double>(
+                    valueListenable: downloadedMBs,
+                    builder: (context, downloaded, child) {
+                      return ValueListenableBuilder<double>(
+                        valueListenable: totalMBs,
+                        builder: (context, total, child) {
+                          return Text('${downloaded.toStringAsFixed(2)} MB de ${total.toStringAsFixed(2)} MB baixados');
+                        },
+                      );
+                    },
+                  ),
+                  ValueListenableBuilder<double>(
+                    valueListenable: downloadProgress,
+                    builder: (context, progress, child) {
+                      return Text('${(progress * 100).toStringAsFixed(0)}% concluído');
+                    },
                   ),
                 ],
-              );
-            },
-          );
-
-          isDownloading = true;
-          await dio.download(
-            gameUrl,
-            downloadPath!,
-            cancelToken: cancelToken,
-            onReceiveProgress: (received, total) {
-              if (total != -1) {
-                double progress = received / total;
-                double mbDownloaded = received / (1024 * 1024);
-                double mbTotal = total / (1024 * 1024);
-
-                downloadProgress.value = progress;
-                downloadedMBs.value = mbDownloaded;
-                totalMBs.value = mbTotal;
-              }
-            }).then((_) {
-              Navigator.of(context).pop();
-            }).catchError((e) {
-              if (CancelToken.isCancel(e)) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Download do jogo foi cancelado pelo usuário.')),
-                );
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Falha ao baixar o jogo.')),
-                );
-              }
-            });
-
-          final result = await AndroidPackageInstaller.installApk(apkFilePath: downloadPath!);
-
-          if (result != null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Instalação iniciada: ${PackageInstallerStatus.byCode(result).name}')),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    print('Download cancelado pelo usuário.');
+                    cancelToken.cancel('Download cancelado pelo usuário.');
+                    Navigator.of(context).pop();
+                    setState(() {
+                      isDownloading = false;
+                    });
+                  },
+                  child: Text('Cancelar'),
+                ),
+              ],
             );
-          } else {
+          },
+        );
+
+        isDownloading = true;
+        await dio.download(
+          gameUrl,
+          downloadPath!,
+          cancelToken: cancelToken,
+          onReceiveProgress: (received, total) {
+            if (total != -1) {
+              double progress = received / total;
+              double mbDownloaded = received / (1024 * 1024);
+              double mbTotal = total / (1024 * 1024);
+
+              downloadProgress.value = progress;
+              downloadedMBs.value = mbDownloaded;
+              totalMBs.value = mbTotal;
+
+              print('Download: ${downloadedMBs.value.toStringAsFixed(2)} MB de ${totalMBs.value.toStringAsFixed(2)} MB');
+            }
+          }).then((_) {
+            print('Download concluído.');
+            Navigator.of(context).pop();
+          }).catchError((e) {
+            print('Falha ao baixar o jogo: $e');
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Falha ao iniciar a instalação.')),
+              SnackBar(content: Text('Falha ao baixar o jogo.')),
             );
-          }
-        } catch (e) {
+          });
+
+        final result = await AndroidPackageInstaller.installApk(apkFilePath: downloadPath!);
+
+        if (result != null) {
+          print('Instalação iniciada: ${PackageInstallerStatus.byCode(result).name}');
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Falha ao baixar o jogo.')),
+            SnackBar(content: Text('Instalação iniciada: ${PackageInstallerStatus.byCode(result).name}')),
+          );
+        } else {
+          print('Falha ao iniciar a instalação.');
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Falha ao iniciar a instalação.')),
           );
         }
-      } else {
+      } catch (e) {
+        print('Falha ao baixar o jogo: $e');
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Caminho de download não definido.')),
+          SnackBar(content: Text('Falha ao baixar o jogo.')),
         );
       }
     } else {
+      print('Caminho de download não definido.');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Permissão de armazenamento ou instalação de pacotes negada.')),
+        SnackBar(content: Text('Caminho de download não definido.')),
       );
     }
   }
 
   @override
   void dispose() {
+    print('Destruindo o estado (_LauncherHomeState)...');
     downloadProgress.dispose();
     downloadedMBs.dispose();
     totalMBs.dispose();
@@ -226,8 +247,11 @@ class _LauncherHomeState extends State<LauncherHome> {
 
   @override
   Widget build(BuildContext context) {
+    print('Construindo a interface (_LauncherHomeState)...');
     return Scaffold(
-      appBar: AppBar(title: Text('Aurora game launcher')),
+      appBar: AppBar(
+        title: Text('Game Launcher'),
+      ),
       body: Center(
         child: ElevatedButton(
           onPressed: downloadPath == null || isDownloading ? null : _checkForUpdate,
