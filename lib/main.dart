@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:android_package_installer/android_package_installer.dart';
+import 'package:install_plugin/install_plugin.dart';
 import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -41,10 +41,10 @@ class _LauncherHomeState extends State<LauncherHome> {
   void initState() {
     super.initState();
     _requestPermissions();
+    _loadCurrentVersion();
   }
 
   Future<void> _requestPermissions() async {
-    // Solicita permissões de armazenamento e instalação de pacotes
     final storageStatus = await Permission.manageExternalStorage.request();
     final installStatus = await Permission.requestInstallPackages.request();
 
@@ -72,6 +72,16 @@ class _LauncherHomeState extends State<LauncherHome> {
     }
   }
 
+  Future<void> _loadCurrentVersion() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? savedVersion = prefs.getString('local_version');
+    if (savedVersion != null) {
+      setState(() {
+        currentVersion = savedVersion;
+      });
+    }
+  }
+
   Future<void> _checkForUpdate() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String localVersion = prefs.getString('local_version') ?? currentVersion;
@@ -86,7 +96,6 @@ class _LauncherHomeState extends State<LauncherHome> {
             SnackBar(content: Text('Nova versão disponível! Baixando...')),
           );
           await downloadAndInstall();
-          prefs.setString('local_version', serverVersion!);
         } else if (_compareVersions(localVersion, serverVersion!) == 0) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Aplicativo já está atualizado.')),
@@ -201,31 +210,24 @@ class _LauncherHomeState extends State<LauncherHome> {
           }).then((_) {
             print('Download concluído.');
             Navigator.of(context).pop();
+            _showInstallDialog();
           }).catchError((e) {
             print('Falha ao baixar o jogo: $e');
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text('Falha ao baixar o jogo.')),
             );
+            setState(() {
+              isDownloading = false;
+            });
           });
-
-        final result = await AndroidPackageInstaller.installApk(apkFilePath: downloadPath!);
-
-        if (result != null) {
-          print('Instalação iniciada: ${PackageInstallerStatus.byCode(result).name}');
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Instalação iniciada: ${PackageInstallerStatus.byCode(result).name}')),
-          );
-        } else {
-          print('Falha ao iniciar a instalação.');
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Falha ao iniciar a instalação.')),
-          );
-        }
       } catch (e) {
         print('Falha ao baixar o jogo: $e');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Falha ao baixar o jogo.')),
         );
+        setState(() {
+          isDownloading = false;
+        });
       }
     } else {
       print('Caminho de download não definido.');
@@ -235,27 +237,122 @@ class _LauncherHomeState extends State<LauncherHome> {
     }
   }
 
-  @override
-  void dispose() {
-    print('Destruindo o estado (_LauncherHomeState)...');
-    downloadProgress.dispose();
-    downloadedMBs.dispose();
-    totalMBs.dispose();
-    cancelToken.cancel();
-    super.dispose();
+  Future<void> _showInstallDialog() async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Instalação'),
+          content: Text('Deseja instalar a atualização agora?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Instalação cancelada pelo usuário.')),
+                );
+                setState(() {
+                  isDownloading = false;
+                });
+              },
+              child: Text('Não'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _installUpdate();
+              },
+              child: Text('Sim'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _installUpdate() async {
+    if (downloadPath != null && File(downloadPath!).existsSync()) {
+      try {
+        final result = await InstallPlugin.installApk(downloadPath!);
+        print('Resultado da instalação: $result');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Instalação concluída com sucesso.')),
+        );
+
+        // Atualizar a versão local para a mais recente do servidor
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.setString('local_version', serverVersion!);
+        setState(() {
+          currentVersion = serverVersion!;
+        });
+      } catch (e) {
+        print('Erro ao instalar o aplicativo: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao instalar o aplicativo.')),
+        );
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Arquivo APK não encontrado.')),
+      );
+    }
+  }
+
+  Future<void> _showCredits() async {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Créditos'),
+          content: Text(
+            'Licenciado pela Licença MIT\n'
+            'Desenvolvido por Eternal Legend: https://eternal-legend.com.br\n'
+            'Jhonata Fernandes: masterJF, https://masterjf-solucoes.com.br/',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Fechar'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    print('Construindo a interface (_LauncherHomeState)...');
     return Scaffold(
       appBar: AppBar(
         title: Text('Game Launcher'),
       ),
       body: Center(
-        child: ElevatedButton(
-          onPressed: downloadPath == null || isDownloading ? null : _checkForUpdate,
-          child: Text('Verificar Atualizações'),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Text(
+              'Bem-vindo ao Game Launcher',
+              style: TextStyle(fontSize: 20),
+            ),
+            SizedBox(height: 20),
+            Text(
+              'Versão Atual: $currentVersion',
+              style: TextStyle(fontSize: 16),
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _checkForUpdate,
+              child: Text('Verificar Atualizações'),
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _showCredits,
+              child: Text('Créditos'),
+            ),
+          ],
         ),
       ),
     );
