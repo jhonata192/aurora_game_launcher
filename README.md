@@ -172,12 +172,16 @@ line 9, 24
 * Line 9, namespace = "com.name.package"
 * line 24, applicationId = "com.package.name"
 then android/app/src/main
-file [AndroidManifest.xml](https://github.com/jhonata192/aurora_game_launcher/blob/main/android/app/src/main/AndroidManifest.xml)
+file
+ [AndroidManifest.xml](https://github.com/jhonata192/aurora_game_launcher/blob/main/android/app/src/main/AndroidManifest.xml)
 line 9, android:label="your-APP-name"
 
 then android/app/src/main/[kotlin/](https://github.com/jhonata192/aurora_game_launcher/tree/main/android/app/src/main/kotlin/)
 you must change the subfolders according to the package name, in the case of this project the subfolders were like this/name/of/your/package
-after changing between them until you reach the file [MainActivity.kt](https://github.com/jhonata192/aurora_game_launcher/blob/main/android/app/src/main/kotlin/com/aurora/launcher_game/MainActivity. kt)
+after changing between them until you reach the file 
+
+[Main-activity.kt](https://github.com/jhonata192/aurora_game_launcher/blob/main/android/app/src/main/kotlin/com/aurora/launcher_game/MainActivity. kt)
+
 open it and change line 1
 Line 1, package com.package.name
 ### signing and compiling
@@ -269,7 +273,9 @@ By following these steps, your Flutter app will be correctly signed and ready fo
 
 ### compiling
 use the command below to compile the signed file in .aab
+
 flutter build appbundle --release
+
 The .aab file will be found in /your-project/build/outputs/bundle/release
 ### Verifying the signature
 You may want to check if your APP has actually been signed with your signing key, for this you can use [virustotal](https://www.virustotal.com/)
@@ -277,7 +283,7 @@ Click on file and choose your .aab file
 Then, on the details tab, check the certificate details
 A basic example might be [like this](https://www.virustotal.com/gui/file/347f8a227f99fbcec5b6b12d2ee9f0b841e4c933bd8fef8d4c874d4aea1a5a8c/details)
 ### known issues
-* you may need to add the latest JDK system variables to sign your application
+* you may need to add the JDK system variables to sign your application
 * Flutter only accepts directories without space, this means your SDK has to be placed in a parent directory
 * every time you have to update the application you will need to change the server version, version.txt located on the server, not the direct URL of the APK this remains intact
 ### credits and thanks
