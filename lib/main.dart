@@ -304,7 +304,7 @@ class _LauncherHomeState extends State<LauncherHome> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Créditos'),
+          title: Text('Credits'),
           content: Text(
             'Licensed under the MIT License\n'
             'Developed by Eternal Legend: https://eternal-legend.com.br\n'
@@ -315,7 +315,7 @@ class _LauncherHomeState extends State<LauncherHome> {
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: Text('Fechar'),
+              child: Text('close'),
             ),
           ],
         );
@@ -334,23 +334,23 @@ class _LauncherHomeState extends State<LauncherHome> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Text(
-              'Bem-vindo ao Game Launcher',
+              'Welcome to Game Launcher',
               style: TextStyle(fontSize: 20),
             ),
             SizedBox(height: 20),
             Text(
-              'Versão Atual: $currentVersion',
+              'Current Version: $currentVersion',
               style: TextStyle(fontSize: 16),
             ),
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: _checkForUpdate,
-              child: Text('Verificar Atualizações'),
+              child: Text('Check for Updates'),
             ),
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: _showCredits,
-              child: Text('Créditos'),
+              child: Text('Credits'),
             ),
           ],
         ),
