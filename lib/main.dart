@@ -49,10 +49,10 @@ class _LauncherHomeState extends State<LauncherHome> {
     final installStatus = await Permission.requestInstallPackages.request();
 
     if (storageStatus.isGranted && installStatus.isGranted) {
-      print('Permissões concedidas.');
+      print('Permissions granted.');
       _initializeDownloadPath();
     } else {
-      print('Permissões negadas.');
+      print('Permissions Denied.');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Permissões negadas.')),
       );
@@ -122,20 +122,20 @@ class _LauncherHomeState extends State<LauncherHome> {
       int serverPart = int.parse(serverParts[i]);
 
       if (localPart < serverPart) {
-        print('Versão local é mais antiga.');
+        print('Local version is older.');
         return -1;
       }
       if (localPart > serverPart) {
-        print('Versão local é mais recente.');
+        print('Local version is newer.');
         return 1;
       }
     }
-    print('Versões são iguais.');
+    print('Versions are the same.');
     return 0;
   }
 
   Future<void> downloadAndInstall() async {
-    print('Iniciando download e instalação...');
+    print('Starting download e instalação...');
     if (downloadPath != null) {
       try {
         showDialog(
@@ -176,7 +176,7 @@ class _LauncherHomeState extends State<LauncherHome> {
               actions: [
                 TextButton(
                   onPressed: () {
-                    print('Download cancelado pelo usuário.');
+                    print('Download canceled by user.');
                     cancelToken.cancel('Download cancelado pelo usuário.');
                     Navigator.of(context).pop();
                     setState(() {
@@ -208,11 +208,11 @@ class _LauncherHomeState extends State<LauncherHome> {
               print('Download: ${downloadedMBs.value.toStringAsFixed(2)} MB de ${totalMBs.value.toStringAsFixed(2)} MB');
             }
           }).then((_) {
-            print('Download concluído.');
+            print('Download completed.');
             Navigator.of(context).pop();
             _showInstallDialog();
           }).catchError((e) {
-            print('Falha ao baixar o jogo: $e');
+            print('Failed to download the game: $e');
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text('Falha ao baixar o jogo.')),
             );
@@ -221,7 +221,7 @@ class _LauncherHomeState extends State<LauncherHome> {
             });
           });
       } catch (e) {
-        print('Falha ao baixar o jogo: $e');
+        print('Failed to download the game: $e');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Falha ao baixar o jogo.')),
         );
@@ -230,7 +230,7 @@ class _LauncherHomeState extends State<LauncherHome> {
         });
       }
     } else {
-      print('Caminho de download não definido.');
+      print('Download path not defined.');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Caminho de download não definido.')),
       );
@@ -275,19 +275,19 @@ class _LauncherHomeState extends State<LauncherHome> {
     if (downloadPath != null && File(downloadPath!).existsSync()) {
       try {
         final result = await InstallPlugin.installApk(downloadPath!);
-        print('Resultado da instalação: $result');
+        print('Installation result: $result');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Instalação concluída com sucesso.')),
         );
 
-        // Atualizar a versão local para a mais recente do servidor
+        // Update local version to latest server version
         SharedPreferences prefs = await SharedPreferences.getInstance();
         await prefs.setString('local_version', serverVersion!);
         setState(() {
           currentVersion = serverVersion!;
         });
       } catch (e) {
-        print('Erro ao instalar o aplicativo: $e');
+        print('Error installing the application: $e');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Erro ao instalar o aplicativo.')),
         );
@@ -306,8 +306,8 @@ class _LauncherHomeState extends State<LauncherHome> {
         return AlertDialog(
           title: Text('Créditos'),
           content: Text(
-            'Licenciado pela Licença MIT\n'
-            'Desenvolvido por Eternal Legend: https://eternal-legend.com.br\n'
+            'Licensed under the MIT License\n'
+            'Developed by Eternal Legend: https://eternal-legend.com.br\n'
             'Jhonata Fernandes: masterJF, https://masterjf-solucoes.com.br/',
           ),
           actions: [
