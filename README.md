@@ -295,5 +295,6 @@ A basic example might be [like this](https://www.virustotal.com/gui/file/347f8a2
 [2](https://github.com/jhonata192)
 By project code and structure
 ### contributing
-For those who want to contribute, welcome to open an [issue](https://github.com/jhonata192/aurora_game_launcher/issues) or a 
-[PR](https://github.com/jhonata192/aurora_game_launcher /pulls)
+To contribute you can
+* open an [issue](https://github.com/jhonata192/aurora_game_launcher/issues)
+* open a [PR](https://github.com/jhonata192/aurora_game_launcher/pulls)
