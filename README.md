@@ -171,6 +171,7 @@ file [build.gradle](https://github.com/jhonata192/aurora_game_launcher/blob/main
 line 9, 24
 * Line 9, namespace = "com.name.package"
 * line 24, applicationId = "com.package.name"
+
 then android/app/src/main
 file
  [AndroidManifest.xml](https://github.com/jhonata192/aurora_game_launcher/blob/main/android/app/src/main/AndroidManifest.xml)
@@ -180,10 +181,11 @@ then android/app/src/main/[kotlin/](https://github.com/jhonata192/aurora_game_la
 you must change the subfolders according to the package name, in the case of this project the subfolders were like this/name/of/your/package
 after changing between them until you reach the file 
 
-[Main-activity.kt](https://github.com/jhonata192/aurora_game_launcher/blob/main/android/app/src/main/kotlin/com/aurora/launcher_game/MainActivity. kt)
+[MainActivity](https://github.com/jhonata192/aurora_game_launcher/blob/main/android/app/src/main/kotlin/com/aurora/launcher_game/MainActivity.kt)
 
 open it and change line 1
 Line 1, package com.package.name
+
 ### signing and compiling
 To submit your application to the Google Playstore you need to sign it and generate a key.properties key for it.
 Follow the steps below.
