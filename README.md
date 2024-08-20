@@ -175,6 +175,7 @@ line 9, 24
 then android/app/src/main
 file
  [AndroidManifest.xml](https://github.com/jhonata192/aurora_game_launcher/blob/main/android/app/src/main/AndroidManifest.xml)
+
 line 9, android:label="your-APP-name"
 
 then android/app/src/main/[kotlin/](https://github.com/jhonata192/aurora_game_launcher/tree/main/android/app/src/main/kotlin/)
@@ -294,4 +295,5 @@ A basic example might be [like this](https://www.virustotal.com/gui/file/347f8a2
 [2](https://github.com/jhonata192)
 By project code and structure
 ### contributing
-For those who want to contribute, welcome to open an [issue](https://github.com/jhonata192/aurora_game_launcher/issues) or a [PR/Pullrequest](https://github.com/jhonata192/aurora_game_launcher /pulls)
+For those who want to contribute, welcome to open an [issue](https://github.com/jhonata192/aurora_game_launcher/issues) or a 
+[PR](https://github.com/jhonata192/aurora_game_launcher /pulls)
